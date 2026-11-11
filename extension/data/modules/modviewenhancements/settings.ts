@@ -79,6 +79,16 @@ export const settings = defineSettings(
 				'Show the subscriber count in the subreddit sidebar. Reddit no longer displays it on old Reddit, but still reports it.',
 			oldReddit: true,
 		},
+		{
+			id: 'showUserChatLink',
+			sharedPolicy: 'raw',
+			type: 'boolean',
+			// Off by default: each profile visit costs an extra about.json request for the account id.
+			default: false,
+			description:
+				'Show a "start chat" link in the user profile sidebar. Reddit no longer offers one on old Reddit. Looking up the account adds an extra request on each profile you visit, and the link is shown even if the user has chat turned off, since Reddit does not report that setting.',
+			oldReddit: true,
+		},
 	] as const,
 )
 

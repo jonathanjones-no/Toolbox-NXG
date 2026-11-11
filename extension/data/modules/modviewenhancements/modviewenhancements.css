@@ -28,3 +28,17 @@ shreddit-post.toolbox-subreddit-color {
 .toolbox-subscriber-count {
 	display: block;
 }
+
+/* Restored profile sidebar chat link (old Reddit); its .spacer wrapper supplies the vertical rhythm */
+.toolbox-user-chat-link {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	width: fit-content;
+}
+
+/* Sprite slice copied from the header #chat icon at runtime; keep it from stretching or shrinking */
+.toolbox-user-chat-icon {
+	display: inline-block;
+	flex: none;
+}

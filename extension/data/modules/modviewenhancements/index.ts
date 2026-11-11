@@ -9,6 +9,7 @@ import {isShredditModQueuePage,} from '../../util/reddit/pageContext'
 import {onSharedMutation,} from '../../util/ui/dom'
 import {createModViewEnhancementsHandlers,} from './dom'
 import {createSubscriberCountHandlers,} from './features/subscriberCount'
+import {createUserChatLinkHandlers,} from './features/userChatLink'
 import {settings,} from './settings'
 import type {ModViewEnhancementsSettings,} from './settings'
 
@@ -28,6 +29,7 @@ function init (options: ModViewEnhancementsSettings,) {
 
 	lifecycle.mount(mve.cleanup,)
 	lifecycle.mount(createSubscriberCountHandlers(options.showSubscriberCount,).cleanup,)
+	lifecycle.mount(createUserChatLinkHandlers(options.showUserChatLink,).cleanup,)
 
 	if (isOldReddit) {
 		lifecycle.on(window, 'TBNewThings', mve.handleNewThings,)

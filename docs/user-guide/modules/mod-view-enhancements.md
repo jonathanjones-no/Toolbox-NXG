@@ -22,6 +22,8 @@ Mod View Enhancements applies passive visual enhancements to moderated content. 
 
 **Sidebar subscriber count** _(old Reddit)_ — restores the subscriber count to the subreddit sidebar. Reddit stopped displaying it on old Reddit but still reports it through its API, so toolbox fetches it and shows it under the subscribe button.
 
+**Profile chat link** _(old Reddit, off by default)_ — restores a "start chat" link to the user profile sidebar, just above "Block user". Reddit no longer offers a way to start a chat from old Reddit; the link opens a chat with that user in Reddit's chat window at the bottom of the page. It is not shown on your own profile or for suspended accounts. Reddit does not report whether a user accepts chats, so the link also appears for users who have chat turned off; Reddit's chat window tells you if the chat can't be started. It is off by default because it adds a request on each profile you visit.
+
 ## Settings
 
 | Setting                                   | Default       | Description                                                                       |
@@ -35,3 +37,4 @@ Mod View Enhancements applies passive visual enhancements to moderated content. 
 | Highlight AutoModerator regex matches     | On            | Highlight bracketed text in automod action/report reasons                         |
 | Highlight regex matches outside the queue | Off           | Also highlight bracketed report matches on subreddit/comment pages _(old Reddit)_ |
 | Show sidebar subscriber count             | On            | Show the subscriber count in the subreddit sidebar _(old Reddit)_                 |
+| Show profile chat link                    | Off           | Show a "start chat" link in the user profile sidebar _(old Reddit)_               |
