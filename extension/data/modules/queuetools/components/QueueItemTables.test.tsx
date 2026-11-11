@@ -76,16 +76,10 @@ describe('QueueItemTables', () => {
 		expect(container.querySelector('table',),).toBeNull()
 	})
 
-	it('starts expanded when the everywhere setting is on', async () => {
+	it('starts expanded when auto-expand applies', async () => {
 		await mount(true,)
 		expect(toggleLabel(),).toBe('hide recent actions',)
 		expect(container.querySelector('table',),).not.toBeNull()
-	})
-
-	it('starts expanded when the queue-only body class is set', async () => {
-		document.body.classList.add('toolbox-show-actions',)
-		await mount(false,)
-		expect(toggleLabel(),).toBe('hide recent actions',)
 	})
 
 	it('can still be collapsed by hand after auto-expanding', async () => {

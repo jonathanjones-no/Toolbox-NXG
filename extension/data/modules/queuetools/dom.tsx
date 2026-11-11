@@ -7,6 +7,7 @@ import {renderAtLocation,} from '../../dom/uiLocations'
 import {createLifecycle,} from '../../framework/lifecycle'
 import createLogger from '../../util/infra/logging'
 import {isOldReddit,} from '../../util/infra/platform'
+import {isModpage, isShredditModQueuePage,} from '../../util/reddit/pageContext'
 import {getApiThingInfo, isInfoRemoved,} from '../../util/reddit/thingInfo'
 import {DismissButtonRenderer,} from './components/DismissButtonRenderer'
 import {QueueItemTables,} from './components/QueueItemTables'
@@ -329,13 +330,17 @@ export function createQueueHandlers (
 	if (actionsEnabled || reportsEnabled) {
 		renderAtLocation('thingDetails', {id: 'queuetools.itemTables', lifecycle: scope,}, ({context,},) => {
 			if (!context.thingId || !context.subreddit) { return null }
+			// Decided from the live URL flags at mount rather than from TBNewPage: old Reddit's
+			// queue items mount during module init, before the first TBNewPage fires, so anything
+			// that event sets arrives after every table has already chosen its initial state.
+			const onQueuePage = !!(isModpage || isShredditModQueuePage)
 			return (
 				<QueueItemTables
 					context={context}
 					showRecentActionsOnApproved={showRecentActionsOnApproved}
 					showRecentActionsOnRemoved={showRecentActionsOnRemoved}
 					showReportReasons={reportsEnabled}
-					autoExpandActions={expandActionReasonEverywhere}
+					autoExpandActions={expandActionReasonEverywhere || (expandActionReasonQueue && onQueuePage)}
 					getActions={getActions}
 					checkIsMod={isModSub}
 					getThingData={getThingData}
@@ -388,14 +393,9 @@ export function createQueueHandlers (
 		},)
 	}
 
-	/** Handles `TBNewPage` - manages the `toolbox-show-actions` class and queue creature. */
+	/** Handles `TBNewPage` - starts or stops the queue creature. */
 	function handleNewPage (event: CustomEvent,) {
 		const detail = event.detail as {pageType?: string}
-		if (expandActionReasonQueue && detail.pageType === 'queueListing') {
-			document.body.classList.add('toolbox-show-actions',)
-		} else {
-			document.body.classList.remove('toolbox-show-actions',)
-		}
 		// Leaving the queue: stop any pending watcher from a previous queue page.
 		if (detail.pageType !== 'queueListing') {
 			creatureWatch.stop()
