@@ -7,6 +7,7 @@ import store from '../../store'
 import {getModuleSettingAsync,} from '../../util/persistence/settings'
 import {link,} from '../../util/reddit/pageContext'
 import {mountReactInLightBody,} from '../../util/ui/reactMount'
+import {getAccountState,} from '../notifier/moduleapi'
 import {type CounterState, getCounterState,} from '../notifier/store'
 import {ModBar,} from './components/ModBar'
 import {createApiBudgetHandlers,} from './features/apiBudget'
@@ -48,9 +49,11 @@ export async function createModbarHandlers (
 		getModuleSettingAsync(utils, 'debugMode', false,),
 		getModuleSettingAsync(notifier, 'modSubreddits', 'mod',),
 		getModuleSettingAsync(notifier, 'unmoderatedSubreddits', 'mod',),
-		getModuleSettingAsync(notifier, 'modqueueCount', 0,),
-		getModuleSettingAsync(notifier, 'unmoderatedCount', 0,),
-		getModuleSettingAsync(notifier, 'modmailCount', 0,),
+		// Last counts seen by this tab's account; settings are shared across Firefox
+		// containers, so these come from the per-account cache instead.
+		getAccountState('modqueueCount',),
+		getAccountState('unmoderatedCount',),
+		getAccountState('modmailCount',),
 		// The Notifier is always enabled now (its poll feeds these counters), so the
 		// hover tooltip keys off whether notifications are on rather than a module toggle.
 		getModuleSettingAsync(notifier, 'showNotifications', true,),

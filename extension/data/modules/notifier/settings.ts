@@ -57,50 +57,6 @@ export const settings = defineSettings(
 			advanced: true,
 			description: 'Interval to check for new items (time in minutes).',
 		},
-
-		// Private storage settings.
-		{
-			id: 'modqueueCount',
-			type: 'number',
-			default: 0,
-			hidden: true,
-		},
-		{
-			id: 'unmoderatedCount',
-			type: 'number',
-			default: 0,
-			hidden: true,
-		},
-		{
-			id: 'modmailCount',
-			type: 'number',
-			default: 0,
-			hidden: true,
-		},
-		{
-			id: 'modmailCategoryCount',
-			type: 'JSON',
-			default: {highlighted: 0, notifications: 0, archived: 0, new: 0, inprogress: 0, mod: 0,},
-			hidden: true,
-		},
-		{
-			id: 'lastChecked',
-			type: 'number',
-			default: -1,
-			hidden: true,
-		},
-		{
-			id: 'lastSeenUnmoderated',
-			type: 'number',
-			default: -1,
-			hidden: true,
-		},
-		{
-			id: 'modqueuePushed',
-			type: 'array',
-			default: [],
-			hidden: true,
-		},
 	] as const,
 )
 

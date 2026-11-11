@@ -128,6 +128,18 @@ export async function doSettingsUpdates () {
 			// fmod (/me/f/mod/) support removed; always use /r/mod/
 			'Toolbox.Notifier.modSubredditsFMod',
 			'Toolbox.Notifier.unmoderatedSubredditsFMod',
+
+			// Notifier poll state moved to the per-account cache so Firefox
+			// containers logged in as different accounts don't share counts
+			...[
+				'modqueueCount',
+				'unmoderatedCount',
+				'modmailCount',
+				'modmailCategoryCount',
+				'lastChecked',
+				'lastSeenUnmoderated',
+				'modqueuePushed',
+			].map((setting,) => `Toolbox.Notifier.${setting}`),
 		]
 		await updateSettings(Object.fromEntries(keysToDelete.map((key,) => [key, undefined,]),),)
 

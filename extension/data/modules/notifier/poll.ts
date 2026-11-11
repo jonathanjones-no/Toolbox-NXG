@@ -12,17 +12,17 @@ import {getTime,} from '../../util/data/time'
 import createLogger from '../../util/infra/logging'
 import {events,} from '../../util/reddit/events'
 import {notification,} from '../../util/ui/notifications'
-import {type NotifierSettings,} from './settings'
+import type {NotifierAccountState,} from './schema'
 import {updateCounters,} from './store'
 
 /**
  * Minimal storage interface required by {@link createNotifierHandlers}.
- * Typed against {@link NotifierSettings} so only valid setting keys can be read or written.
- * `Module<NotifierSettings>` satisfies this interface structurally.
+ * Typed against {@link NotifierAccountState} so only valid state keys can be read or written;
+ * the real implementation is the per-account cache in `./moduleapi`.
  */
 export interface NotifierStorage {
-	get<K extends keyof NotifierSettings & string,>(key: K,): Promise<NotifierSettings[K]>
-	set<K extends keyof NotifierSettings & string,>(key: K, value: NotifierSettings[K],): Promise<unknown>
+	get<K extends keyof NotifierAccountState,>(key: K,): Promise<NotifierAccountState[K]>
+	set<K extends keyof NotifierAccountState,>(key: K, value: NotifierAccountState[K],): Promise<unknown>
 }
 
 declare global {
@@ -166,7 +166,7 @@ export interface NotifierHandlers {
 /**
  * Creates polling and event-handling functions for the Notifier module.
  * @param options Runtime configuration (intervals, subreddits, initial counts, etc.).
- * @param module Storage adapter for persisting counts and timestamps between poll cycles.
+ * @param module Per-account storage for persisting counts and timestamps between poll cycles.
  */
 export function createNotifierHandlers (
 	options: ModbarCounterOptions,

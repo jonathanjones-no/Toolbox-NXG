@@ -6,6 +6,7 @@ import {modbar,} from '../../framework/moduleIds'
 import {minutesToMilliseconds,} from '../../util/data/time'
 import {isEmbedded,} from '../../util/infra/platform'
 import {getModuleSettingAsync,} from '../../util/persistence/settings'
+import {getAccountState, setAccountState,} from './moduleapi'
 import {createNotifierHandlers, toModmailCategoryCount,} from './poll'
 import {type NotifierSettings, settings,} from './settings'
 
@@ -19,7 +20,7 @@ export default new Module<NotifierSettings>({
 	docSlug: 'notifier',
 	alwaysEnabled: true,
 	settings,
-}, async function init (this: Module<NotifierSettings>, {
+}, async function init ({
 	showNotifications,
 	modNotifications,
 	unmoderatedNotifications,
@@ -27,10 +28,6 @@ export default new Module<NotifierSettings>({
 	modSubreddits,
 	unmoderatedSubreddits,
 	checkInterval,
-	modqueueCount,
-	unmoderatedCount,
-	modmailCount,
-	modmailCategoryCount,
 }: NotifierSettings,) {
 	if (isEmbedded) {
 		return
@@ -38,7 +35,13 @@ export default new Module<NotifierSettings>({
 
 	const lifecycle = createLifecycle()
 
-	const unmoderatedOn = await getModuleSettingAsync(modbar, 'unmoderatedOn', true,)
+	const [unmoderatedOn, modqueueCount, unmoderatedCount, modmailCount, modmailCategoryCount,] = await Promise.all([
+		getModuleSettingAsync(modbar, 'unmoderatedOn', true,),
+		getAccountState('modqueueCount',),
+		getAccountState('unmoderatedCount',),
+		getAccountState('modmailCount',),
+		getAccountState('modmailCategoryCount',),
+	],)
 	const checkIntervalMillis = minutesToMilliseconds(checkInterval,)
 
 	const {getmessages, handleCounterUpdate,} = createNotifierHandlers({
@@ -54,7 +57,7 @@ export default new Module<NotifierSettings>({
 		unmoderatedCount,
 		modmailCount,
 		modmailCategoryCount: toModmailCategoryCount(modmailCategoryCount,),
-	}, this,)
+	}, {get: getAccountState, set: setAccountState,},)
 
 	lifecycle.on(window, 'TB_UPDATE_COUNTERS', handleCounterUpdate,)
 	lifecycle.interval(() => void getmessages(), checkIntervalMillis,)
