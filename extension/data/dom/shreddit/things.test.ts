@@ -185,7 +185,7 @@ describe('subredditFromPermalink', () => {
 	})
 
 	it('extracts subreddit from a comment permalink', () => {
-		expect(subredditFromPermalink('/r/dirtypenpals/comments/1tranwv/comment/oomeanv/',),).toBe('dirtypenpals',)
+		expect(subredditFromPermalink('/r/examplesub/comments/abc123/comment/def456/',),).toBe('examplesub',)
 	})
 
 	it('returns empty string for an empty input', () => {
