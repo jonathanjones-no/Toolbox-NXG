@@ -25,6 +25,7 @@ import {events, sendEvent,} from '../../util/reddit/events'
 import {pageDetails, postSite,} from '../../util/reddit/pageContext'
 import type {ThingInfo,} from '../../util/reddit/thingInfo'
 import {getApiThingInfo,} from '../../util/reddit/thingInfo'
+import {lacksWikiAccess,} from '../../util/wiki/wikiAccess'
 import {getConfig,} from '../config/moduleapi'
 import {getSavedBanMacros,} from '../shared/banMacros/moduleapi'
 import {proposeOrRemove,} from '../shared/proposals/gateway'
@@ -721,6 +722,7 @@ export function createRemovalReasonsHandlers ({
 			personalRequireLink,
 			defaultNoteDestinationSetting,
 			nativeModLogEnabled,
+			noWikiAccess,
 		] = await Promise.all([
 			getConfig(baseData.subreddit,).catch(() => undefined),
 			getModuleSettingAsync<boolean>(usernotes, 'requireNoteType', false,),
@@ -729,6 +731,8 @@ export function createRemovalReasonsHandlers ({
 			getModuleSettingAsync<string>(removalReasons, 'defaultNoteDestination', 'toolbox_note',),
 			// Must match the Native Mod Log module's `enabledByDefault: false`.
 			getModuleSettingAsync<boolean>(nativeModLog, 'enabled', false,),
+			// Toolbox usernotes live in mod-only wiki pages, out of reach without the wiki permission.
+			lacksWikiAccess(baseData.subreddit,),
 		],)
 		const usernoteRequire = resolveUsernoteRequirements(
 			subUsernoteRequireFromConfig(reqConfig,),
@@ -869,6 +873,7 @@ export function createRemovalReasonsHandlers ({
 			// the moderating team's policy, and the Ban settings tab already holds it for the mod button.
 			defaultBan: defaultRemovalBan(reqConfig,),
 			nativeNotesAvailable,
+			toolboxNotesAvailable: !noWikiAccess,
 			savedBanMacros: reqConfig?.savedBanMacros ?? [],
 			onRemoved,
 			onClose: () => {

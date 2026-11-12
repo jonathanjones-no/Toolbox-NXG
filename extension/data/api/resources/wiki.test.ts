@@ -62,6 +62,22 @@ describe('readFromWiki', () => {
 		await expect(readFromWiki('testsub', 'toolbox',),).resolves.toEqual({ok: false, reason: 'no_page',},)
 	})
 
+	it('maps PAGE_NOT_FOUND (missing page, viewer may not create it) to no_page', async () => {
+		const error: Error & {response?: Response} = new Error('not found',)
+		error.response = new Response(JSON.stringify({reason: 'PAGE_NOT_FOUND',},), {status: 404,},)
+		apiOauthGET.mockRejectedValue(error,)
+
+		await expect(readFromWiki('testsub', 'toolbox',),).resolves.toEqual({ok: false, reason: 'no_page',},)
+	})
+
+	it('keeps an unreadable existing page (MAY_NOT_VIEW) as unknown_error', async () => {
+		const error: Error & {response?: Response} = new Error('forbidden',)
+		error.response = new Response(JSON.stringify({reason: 'MAY_NOT_VIEW',},), {status: 403,},)
+		apiOauthGET.mockRejectedValue(error,)
+
+		await expect(readFromWiki('testsub', 'toolbox',),).resolves.toEqual({ok: false, reason: 'unknown_error',},)
+	})
+
 	it('maps unknown request failures to unknown_error', async () => {
 		apiOauthGET.mockRejectedValue(new Error('network',),)
 

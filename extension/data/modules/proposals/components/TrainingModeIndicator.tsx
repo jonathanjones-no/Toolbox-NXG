@@ -1,49 +1,64 @@
 /**
- * Modbar indicator shown when the current user is a trainee on the subreddit they're
- * viewing. It signals that their moderation actions on this subreddit are captured as
+ * Modbar indicator for the current user's training status on the subreddit they're
+ * viewing. For trainees it signals that their moderation actions here are captured as
  * proposals for another moderator to review rather than taking effect immediately - the
- * counterpart to the per-thing capture the gateway performs. Renders nothing off a
- * subreddit page or for non-trainees.
+ * counterpart to the per-thing capture the gateway performs. For a moderator without wiki
+ * permission it instead explains why the wiki-backed toolbox features are unavailable
+ * (their actions are live). Renders nothing otherwise.
  *
- * Rendered as a graduation-cap glyph in the modbar's right-hand counter group (just left
- * of the proposals icon) so it reads as a sibling of the modmail/modqueue/proposals
- * counters; the trainee explanation lives in its tooltip.
+ * Rendered as a glyph in the modbar's right-hand counter group (just left of the
+ * proposals icon) so it reads as a sibling of the modmail/modqueue/proposals counters;
+ * the explanation lives in its tooltip.
  */
 
 import {useEffect, useState,} from 'react'
 
 import {Icon,} from '../../../shared/controls/Icon'
 import {postSite,} from '../../../util/reddit/pageContext'
-import {isTraineeFor,} from '../../shared/proposals/traineeState'
+import {getTrainingStatus, type TrainingStatus,} from '../../shared/proposals/traineeState'
 
-/** Renders the modbar "Training mode" chip for trainees on the current subreddit. */
+/** Builds the tooltip explaining a visible status. */
+function describeStatus (status: Exclude<TrainingStatus, 'none'>, subreddit: string,): string {
+	switch (status) {
+		case 'trainee':
+			return `Training mode: you are a trainee in /r/${subreddit}. Your moderation actions here are `
+				+ 'captured as proposals for another moderator to review instead of taking effect immediately.'
+		case 'noWikiAccess':
+			return `You don't have the wiki permission in /r/${subreddit}. Toolbox keeps its settings, removal `
+				+ 'reasons, usernotes, and training data in the subreddit wiki, so those features are unavailable '
+				+ 'here. Your moderation actions still work normally. Ask a moderator with full permissions to '
+				+ 'grant you the wiki permission.'
+	}
+}
+
+/** Renders the modbar training-status chip for the current subreddit. */
 export function TrainingModeIndicator () {
 	const subreddit = postSite
-	const [isTrainee, setIsTrainee,] = useState(false,)
+	const [status, setStatus,] = useState<TrainingStatus>('none',)
 
 	useEffect(() => {
 		if (!subreddit) {
-			setIsTrainee(false,)
+			setStatus('none',)
 			return
 		}
 		let cancelled = false
-		void isTraineeFor(subreddit,).then((value,) => {
-			if (!cancelled) { setIsTrainee(value,) }
+		void getTrainingStatus(subreddit,).then((value,) => {
+			if (!cancelled) { setStatus(value,) }
 		},)
 		return () => {
 			cancelled = true
 		}
 	}, [subreddit,],)
 
-	if (!subreddit || !isTrainee) { return null }
+	if (!subreddit || status === 'none') { return null }
 
+	const noWiki = status === 'noWikiAccess'
 	return (
 		<a
-			className="toolbox-icons toolbox-training-mode"
-			title={`Training mode: you are a trainee in /r/${subreddit}. Your moderation actions here are `
-				+ 'captured as proposals for another moderator to review instead of taking effect immediately.'}
+			className={noWiki ? 'toolbox-icons toolbox-no-wiki-access' : 'toolbox-icons toolbox-training-mode'}
+			title={describeStatus(status, subreddit,)}
 		>
-			<Icon icon="trainingMode" />
+			<Icon icon={noWiki ? 'unknownDocument' : 'trainingMode'} />
 		</a>
 	)
 }

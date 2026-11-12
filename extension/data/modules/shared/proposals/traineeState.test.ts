@@ -6,15 +6,21 @@ import {afterEach, beforeEach, describe, expect, it, vi,} from 'vitest'
 const getModSubs = vi.hoisted(() => vi.fn())
 const tryGetConfig = vi.hoisted(() => vi.fn())
 const getCurrentUser = vi.hoisted(() => vi.fn(async () => 'aliceTrainee'))
+const isModSub = vi.hoisted(() => vi.fn(async () => true))
+const getModPermissions = vi.hoisted(() => vi.fn(async (): Promise<string[]> => ['all',]))
 
-vi.mock('../../../api/resources/modSubs', () => ({getModSubs,}),)
+vi.mock('../../../api/resources/modSubs', () => ({getModSubs, isModSub,}),)
+vi.mock('../../../api/resources/relationships', () => ({
+	getModPermissions,
+	canEditWiki: (permissions: readonly string[],) => permissions.includes('all',) || permissions.includes('wiki',),
+}),)
 vi.mock('../../config/moduleapi', () => ({tryGetConfig,}),)
 vi.mock('../../../api/resources/me', () => ({getCurrentUser,}),)
 
 import {
 	ensureTraineeStateLoaded,
+	getTrainingStatus,
 	invalidateTraineeState,
-	isActionGuardedFor,
 	isTraineeAnywhereSync,
 	isTraineeFor,
 	isTraineeForSync,
@@ -27,6 +33,8 @@ beforeEach(async () => {
 	vi.clearAllMocks()
 	invalidateTraineeState()
 	getModSubs.mockResolvedValue(['sub1', 'sub2',],)
+	isModSub.mockResolvedValue(true,)
+	getModPermissions.mockResolvedValue(['all',],)
 	tryGetConfig.mockImplementation(async (sub: string,) => ({
 		status: 'ok',
 		config: sub === 'sub1' ? {trainingMods: ['aliceTrainee',],} : {trainingMods: [],},
@@ -96,53 +104,64 @@ describe('isTraineeAnywhereSync', () => {
 	})
 })
 
-describe('unreadable config fails safe (training state unknown ≠ no trainees)', () => {
-	it('treats a read error as "capture", not "no trainees"', async () => {
+describe('unreadable config fails open (a bug must never block mod actions)', () => {
+	it('treats a read error as "not a trainee" so the action is performed live', async () => {
 		tryGetConfig.mockResolvedValue({status: 'error',},)
-		// Even though membership is unknown, the sync/async checks must say "trainee" so the
-		// action is captured for review rather than performed live.
-		expect(await isTraineeFor('sub1',),).toBe(true,)
-		expect(isTraineeForSync('sub1',),).toBe(true,)
-		// And every action type is guarded under an unknown config.
-		expect(await isActionGuardedFor('sub1', 'remove',),).toBe(true,)
+		expect(await isTraineeFor('sub1',),).toBe(false,)
+		expect(isTraineeForSync('sub1',),).toBe(false,)
+		expect(isTraineeAnywhereSync(),).toBe(false,)
+		expect(await getTrainingStatus('sub1',),).toBe('none',)
 	})
 
-	it('still treats a sub with no config page as "no trainees" (perform live)', async () => {
-		// `absent` is a definite answer — no config means no training — so it must NOT capture.
+	it('treats an unexpected rejection the same way', async () => {
+		tryGetConfig.mockRejectedValue(new Error('boom',),)
+		expect(await isTraineeFor('sub1',),).toBe(false,)
+	})
+
+	it('treats a sub with no config page as "no trainees"', async () => {
 		tryGetConfig.mockResolvedValue({status: 'absent',},)
 		expect(await isTraineeFor('sub1',),).toBe(false,)
 		expect(isTraineeForSync('sub1',),).toBe(false,)
 	})
 
-	it('a non-moderated sub (config mod-gated to absent) is "no trainees", not unreadable', async () => {
-		// The config layer default-denies subs the viewer doesn't moderate to `absent` (a
-		// definite "no config") rather than `error`, so the training indicator stays hidden
-		// instead of fail-safing to "trainee" via the unreadable backstop.
-		tryGetConfig.mockResolvedValue({status: 'absent',},)
-		await ensureTraineeStateLoaded('notmysub',)
-		expect(isTraineeForSync('notmysub',),).toBe(false,)
-		// Not added to the unreadable set, so the cross-sub fail-safe stays false too.
-		expect(isTraineeAnywhereSync(),).toBe(false,)
-	})
-
-	it('re-attempts the read after a transient error rather than caching "unknown"', async () => {
+	it('re-attempts the read after an error, picking up a real trainee listing', async () => {
 		tryGetConfig.mockResolvedValueOnce({status: 'error',},)
 		await ensureTraineeStateLoaded('sub1',)
-		expect(isTraineeForSync('sub1',),).toBe(true,) // failed read → fail-safe capture
-		// A later read succeeds (sub1 lists the user as a trainee) and supersedes the unknown.
+		expect(isTraineeForSync('sub1',),).toBe(false,)
 		tryGetConfig.mockResolvedValue({status: 'ok', config: {trainingMods: ['aliceTrainee',],},},)
 		await ensureTraineeStateLoaded('sub1',)
 		expect(isTraineeForSync('sub1',),).toBe(true,)
 		expect(isTraineeAnywhereSync(),).toBe(true,)
 	})
+})
 
-	it('a recovered read clears the unreadable mark (anywhere goes back to false)', async () => {
-		tryGetConfig.mockResolvedValueOnce({status: 'error',},)
-		await ensureTraineeStateLoaded('sub2',)
-		expect(isTraineeAnywhereSync(),).toBe(true,) // unknown sub ⇒ fail-safe yes
-		tryGetConfig.mockResolvedValue({status: 'ok', config: {trainingMods: [],},},)
-		await ensureTraineeStateLoaded('sub2',)
-		// sub2 now known with no trainees and nothing else unreadable ⇒ back to false.
-		expect(isTraineeAnywhereSync(),).toBe(false,)
+describe('moderators without the wiki permission', () => {
+	it('reports noWikiAccess when the config is unreadable for lack of wiki permission', async () => {
+		getModPermissions.mockResolvedValue(['access', 'mail', 'config', 'posts', 'flair',],)
+		tryGetConfig.mockResolvedValue({status: 'error',},)
+		expect(await getTrainingStatus('sub1',),).toBe('noWikiAccess',)
+		expect(isTraineeForSync('sub1',),).toBe(false,)
+	})
+
+	it('reports noWikiAccess on a sub with no config at all', async () => {
+		getModPermissions.mockResolvedValue(['posts',],)
+		tryGetConfig.mockResolvedValue({status: 'absent',},)
+		expect(await getTrainingStatus('sub2',),).toBe('noWikiAccess',)
+	})
+
+	it('shows nothing when the permission lookup fails', async () => {
+		getModPermissions.mockRejectedValue(new Error('network',),)
+		tryGetConfig.mockResolvedValue({status: 'absent',},)
+		expect(await getTrainingStatus('sub2',),).toBe('none',)
+	})
+
+	it('shows nothing for a non-moderated sub', async () => {
+		isModSub.mockResolvedValue(false,)
+		tryGetConfig.mockResolvedValue({status: 'absent',},)
+		expect(await getTrainingStatus('elsewhere',),).toBe('none',)
+	})
+
+	it('reports a listed trainee as trainee', async () => {
+		expect(await getTrainingStatus('sub1',),).toBe('trainee',)
 	})
 })

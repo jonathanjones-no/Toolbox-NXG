@@ -671,7 +671,11 @@ describe('RemovalReasonsOverlay (note destination)', () => {
 	}
 
 	/** Renders the overlay and selects the noted reason, opening the note section. */
-	async function renderWithNote (defaultNoteDestination?: NoteDestination, nativeNotesAvailable = true,) {
+	async function renderWithNote (
+		defaultNoteDestination?: NoteDestination,
+		nativeNotesAvailable = true,
+		toolboxNotesAvailable = true,
+	) {
 		await act(async () => {
 			root.render(
 				<RemovalReasonsOverlay
@@ -681,6 +685,7 @@ describe('RemovalReasonsOverlay (note destination)', () => {
 					settings={settings}
 					{...(defaultNoteDestination ? {defaultNoteDestination,} : {})}
 					nativeNotesAvailable={nativeNotesAvailable}
+					toolboxNotesAvailable={toolboxNotesAvailable}
 					onClose={onClose}
 				/>,
 			)
@@ -716,6 +721,26 @@ describe('RemovalReasonsOverlay (note destination)', () => {
 	function chipSelected (label: string,) {
 		return chip(label,).className.includes('noteTypeChipSelected',)
 	}
+
+	it('without wiki access, routes the note to a Reddit mod note with no Toolbox option', async () => {
+		await renderWithNote(undefined, true, false,)
+
+		expect(container.textContent,).toContain('Leave a Reddit mod note for this user',)
+		// No destination choice: the Toolbox radio is gone and Reddit's labels show.
+		expect(
+			[...container.querySelectorAll('label',),].some((l,) => l.textContent?.trim() === 'Toolbox note'),
+		).toBe(false,)
+		expect(chipLabels(),).toContain('Permaban',)
+	})
+
+	it('without wiki access or mod notes, offers no note at all', async () => {
+		await renderWithNote(undefined, false, false,)
+
+		expect(container.textContent,).not.toContain('Leave a note for this user',)
+		expect(container.textContent,).toContain('Toolbox usernotes need the wiki permission',)
+		// Selecting a reason with a default note must not switch the note section on.
+		expect(container.textContent,).not.toContain('Include link to removed item',)
+	})
 
 	it('defaults to the Toolbox destination and shows the subreddit\'s note types', async () => {
 		await renderWithNote()

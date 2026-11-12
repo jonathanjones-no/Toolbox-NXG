@@ -40,6 +40,7 @@ import {
 	type UserNotesData,
 } from '../../util/wiki/schemas/usernotes/schema'
 import {getSessionStorageInfo,} from '../../util/wiki/schemas/usernotes/sharded'
+import {lacksWikiAccess,} from '../../util/wiki/wikiAccess'
 import {OLD_WIKI_PATHS,} from '../../util/wiki/wikiConstants'
 import {resolveWikiLayout,} from '../../util/wiki/wikiPaths'
 import {getConfig,} from '../config/moduleapi'
@@ -175,8 +176,11 @@ export function createNotesDisplay (
 		useEffect(() => {
 			if (!subreddit) { return }
 			let alive = true
-			isModSub(subreddit,).then((mod,) => {
+			// A moderator without the wiki permission can't read or write Toolbox usernotes
+			// (they live in mod-only wiki pages), so offer no note tag at all for them.
+			Promise.all([isModSub(subreddit,), lacksWikiAccess(subreddit,),],).then(([isSubMod, noWiki,],) => {
 				if (!alive) { return }
+				const mod = isSubMod && !noWiki
 				setIsMod(mod,)
 				if (mod) {
 					foundSubreddit(subreddit,)

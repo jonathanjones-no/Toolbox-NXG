@@ -155,7 +155,11 @@ export async function readFromWiki<T extends object = Record<string, unknown>,> 
 		} catch {
 			reason = ''
 		}
-		if (reason === 'PAGE_NOT_CREATED') {
+		// Reddit reports a missing page as PAGE_NOT_CREATED to viewers who may create it and
+		// as PAGE_NOT_FOUND to everyone else (e.g. a moderator without wiki permission). An
+		// existing page the viewer may not read is a 403 MAY_NOT_VIEW instead, so both 404
+		// reasons are a definite "no such page", not an unknown failure.
+		if (reason === 'PAGE_NOT_CREATED' || reason === 'PAGE_NOT_FOUND') {
 			// An uncreated page is an ordinary state (a sub simply hasn't saved this
 			// config yet), not a failure - log at debug so it doesn't read as an error.
 			log.debug(`Wiki page not created (${subreddit}/${page})`,)

@@ -14,6 +14,7 @@ import {getModSubs,} from '../../../api/resources/modSubs'
 import {mapWithConcurrency,} from '../../../util/data/async'
 import createLogger from '../../../util/infra/logging'
 import {isUserProfileSubreddit,} from '../../../util/reddit/profileSubreddit'
+import {clearWikiAccessCache, getWikiAccess,} from '../../../util/wiki/wikiAccess'
 import {tryGetConfig,} from '../../config/moduleapi'
 import {normalizeUsername,} from './usernames'
 
@@ -39,15 +40,6 @@ const traineeSets = new Map<string, Set<string>>()
  * by {@link ensureTraineeStateLoaded}.
  */
 const guardedActionSets = new Map<string, Set<string> | undefined>()
-/**
- * Subreddits (lowercased) whose config could not be *read* (transient error / unparseable),
- * as distinct from a sub with no config page (which is a definite "no trainees"). Training
- * state there is unknown, so the checks below fail **safe** - treat the user as a trainee so
- * the action is captured for review rather than performed live. Not a terminal cache: these
- * subs are absent from {@link traineeSets}, so {@link ensureTraineeStateLoaded} re-attempts
- * the read on the next call rather than locking in "unknown".
- */
-const unreadableSubs = new Set<string>()
 /** In-flight per-subreddit loads, coalesced so concurrent callers share one fetch. */
 const loading = new Map<string, Promise<void>>()
 
@@ -125,10 +117,11 @@ export function ensureTraineeStateLoaded (subreddit: string,): Promise<void> {
 		try {
 			const result = await tryGetConfig(subreddit,)
 			if (result.status === 'error') {
-				// Couldn't read the config - training state is unknown. Mark the sub unreadable
-				// (the checks fail safe to "capture") and leave it OUT of traineeSets so the next
-				// check re-attempts the read rather than locking in this transient failure.
-				unreadableSubs.add(key,)
+				// Couldn't read the config. Fail OPEN: treat the user as not a trainee so a
+				// transient error or a bug can never stop a moderator from acting (the cost is
+				// a trainee's action occasionally going through unreviewed). Leave the sub out
+				// of traineeSets so the next check re-attempts the read.
+				log.warn(`could not read the config for /r/${subreddit}; training mode not applied`,)
 				return
 			}
 			// `absent` (no config page) is a definite "no trainees"; `ok` carries the real list.
@@ -140,19 +133,34 @@ export function ensureTraineeStateLoaded (subreddit: string,): Promise<void> {
 			// it to valid discriminants, so no validation is needed at action time.
 			const guarded = config?.guardedActions
 			guardedActionSets.set(key, guarded ? new Set(guarded,) : undefined,)
-			// A successful read supersedes any prior unreadable marking.
-			unreadableSubs.delete(key,)
 		} catch (err) {
 			// An unexpected rejection (e.g. layout resolution threw) is the same as a read
-			// error: unknown state, fail safe to "capture", and retryable next call.
+			// error: fail open (not a trainee) and retry on the next call.
 			log.warn(`could not load trainingMods for /r/${subreddit}`, err,)
-			unreadableSubs.add(key,)
 		} finally {
 			loading.delete(key,)
 		}
 	})()
 	loading.set(key, promise,)
 	return promise
+}
+
+/**
+ * The current user's training status on a subreddit, for the modbar indicator:
+ * - `trainee` - listed in `trainingMods`; in-scope actions are captured for review.
+ * - `noWikiAccess` - a moderator without wiki permission; toolbox's wiki-backed features
+ *   (config, removal reasons, usernotes, training) are unavailable, actions are live.
+ * - `none` - nothing to show.
+ */
+export type TrainingStatus = 'trainee' | 'noWikiAccess' | 'none'
+
+/**
+ * Resolves the current user's {@link TrainingStatus} on a subreddit.
+ * @param subreddit The subreddit to check.
+ */
+export async function getTrainingStatus (subreddit: string,): Promise<TrainingStatus> {
+	if (await isTraineeFor(subreddit,)) { return 'trainee' }
+	return await getWikiAccess(subreddit,) === false ? 'noWikiAccess' : 'none'
 }
 
 /**
@@ -166,11 +174,9 @@ export function isTraineeForSync (subreddit: string,): boolean {
 	if (!currentUserLoaded || !currentUserLower) { return false }
 	const key = subreddit.toLowerCase()
 	const set = traineeSets.get(key,)
-	if (set) { return set.has(currentUserLower,) }
-	// Config unreadable ⇒ training state unknown ⇒ fail safe to "trainee" so the action is
-	// captured, never performed live. A sub that simply hasn't loaded yet stays false (the
-	// async path is the accurate decision and will load + re-check).
-	return unreadableSubs.has(key,)
+	// A sub that hasn't loaded (or whose config couldn't be read) is not a trainee: training
+	// mode only applies once the trainee list has actually been read.
+	return set?.has(currentUserLower,) ?? false
 }
 
 /**
@@ -182,10 +188,6 @@ export function isTraineeForSync (subreddit: string,): boolean {
  */
 export function isTraineeAnywhereSync (): boolean {
 	if (!currentUserLoaded || !currentUserLower) { return false }
-	// Any sub we couldn't read leaves training state unknown there, so fail safe to "yes":
-	// the native-approve fast path then won't bail and instead takes the careful per-sub
-	// capture path (which re-derives the accurate answer for the action's actual sub).
-	if (unreadableSubs.size > 0) { return true }
 	for (const set of traineeSets.values()) {
 		if (set.has(currentUserLower,)) { return true }
 	}
@@ -246,8 +248,8 @@ export function warmAllTraineeStates (): Promise<void> {
 		// subs, but it has no toolbox config/training state - skip it so the warm doesn't
 		// fire doomed config reads for it.
 		const realSubs = subs.filter((subreddit,) => !isUserProfileSubreddit(subreddit,))
-		// `ensureTraineeStateLoaded` never rejects (a read error marks the sub unreadable
-		// rather than throwing), so the bounded fan-out can't throw.
+		// `ensureTraineeStateLoaded` never rejects (a read error is logged and the sub left
+		// unloaded rather than throwing), so the bounded fan-out can't throw.
 		await mapWithConcurrency(realSubs, WARM_ALL_CONCURRENCY, (subreddit,) => ensureTraineeStateLoaded(subreddit,),)
 	})()
 	return warmAllPromise
@@ -267,11 +269,11 @@ export function invalidateTraineeState (subreddit?: string,): void {
 	if (subreddit === undefined) {
 		traineeSets.clear()
 		guardedActionSets.clear()
-		unreadableSubs.clear()
+		clearWikiAccessCache()
 	} else {
 		const key = subreddit.toLowerCase()
 		traineeSets.delete(key,)
 		guardedActionSets.delete(key,)
-		unreadableSubs.delete(key,)
+		clearWikiAccessCache(subreddit,)
 	}
 }

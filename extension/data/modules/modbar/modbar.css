@@ -153,6 +153,13 @@ body:has(.modal.in) .toolbox-scope .toolbox-bottombar-hidden {
 	cursor: default;
 }
 
+/* "No wiki permission" indicator: same passive chip, shown to moderators who lack the
+   wiki permission so the missing wiki-backed features have a visible explanation. */
+.toolbox-scope .toolbox-toolbarcounters .toolbox-no-wiki-access {
+	color: var(--toolbox-caution-text);
+	cursor: default;
+}
+
 /* Pill badge for each counter (modmail, modqueue, unmoderated, proposals) */
 .toolbox-scope .toolbox-toolbarcounters .toolbox-counter-badge {
 	display: inline-block;

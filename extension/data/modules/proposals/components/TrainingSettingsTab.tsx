@@ -3,6 +3,7 @@
 import {useEffect, useState,} from 'react'
 
 import {getCurrentUser,} from '../../../api/resources/me'
+import {canEditWiki,} from '../../../api/resources/relationships'
 import {getSubredditListing,} from '../../../api/resources/subreddits'
 import {CheckboxInput,} from '../../../shared/controls/CheckboxInput'
 import {NumberInput,} from '../../../shared/controls/NumberInput'
@@ -197,7 +198,8 @@ export function TrainingSettingsTab ({state, saveRef, onSave,}: Props,) {
 				<div className={css.sectionTitle}>Moderators in training</div>
 				<p className={css.sectionDesc}>
 					When a moderator is in training, their approve/remove/ban/lock actions are captured as proposals for
-					another moderator to review instead of taking effect immediately.
+					another moderator to review instead of taking effect immediately. Trainees need the wiki permission:
+					the trainee list lives in the subreddit wiki, so it never reaches moderators unable to read it.
 				</p>
 				{mods === null && !error && <div className={css.status}>Loading moderators...</div>}
 				{error && <div className={css.status}>{error}</div>}
@@ -208,6 +210,9 @@ export function TrainingSettingsTab ({state, saveRef, onSave,}: Props,) {
 					<div className={css.modList}>
 						{mods.map((mod, index,) => {
 							const locked = isModLocked(index,)
+							// Without the wiki permission a mod can't read the config that lists
+							// trainees, so training mode never applies to them.
+							const noWiki = !canEditWiki(mod.mod_permissions ?? [],)
 							return (
 								<CheckboxInput
 									key={mod.name}
@@ -215,6 +220,11 @@ export function TrainingSettingsTab ({state, saveRef, onSave,}: Props,) {
 										<>
 											u/{mod.name}
 											{locked && <span className={css.hint}>- more senior, cannot change</span>}
+											{noWiki && (
+												<span className={css.hint}>
+													- no wiki permission, so training mode cannot apply to them
+												</span>
+											)}
 										</>
 									}
 									checked={selected.has(mod.name.toLowerCase(),)}

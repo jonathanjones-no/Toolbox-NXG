@@ -190,6 +190,12 @@ interface RemovalReasonsOverlayProps {
 	 */
 	nativeNotesAvailable?: boolean
 	/**
+	 * Whether a Toolbox usernote can be written (false for a moderator without the wiki
+	 * permission, since usernotes live in mod-only wiki pages). When false the note goes to
+	 * a Reddit mod note if one is available, and the note option is hidden otherwise.
+	 */
+	toolboxNotesAvailable?: boolean
+	/**
 	 * Pre-fill captured from a proposal, for Edit & Accept. When set, the overlay seeds
 	 * its selection/usernote/ban/delivery from it. Direct-perform mode is driven by
 	 * {@link acceptGate}, not by the presence of this pre-seed.
@@ -257,6 +263,7 @@ export function RemovalReasonsOverlay ({
 	defaultNoteDestination = 'toolbox',
 	defaultBan = {permanent: false, days: fallbackBanDays,},
 	nativeNotesAvailable = true,
+	toolboxNotesAvailable = true,
 	seededFromIntent,
 	suggestedReasonIds,
 	acceptGate,
@@ -488,16 +495,21 @@ export function RemovalReasonsOverlay ({
 		return `A ${name} field in this reason ${cause} instead of becoming a control. ${where}`
 	}, [literalField, nativeMode,],)
 
-	const [leaveUsernote, setLeaveUsernote,] = useState(!!seededFromIntent?.usernote,)
+	// Any note destination at all? Without Toolbox notes only a Reddit mod note remains.
+	const canLeaveNote = toolboxNotesAvailable || nativeNotesAvailable
+		|| seededFromIntent?.usernote?.destination === 'native'
+	const [leaveUsernote, setLeaveUsernote,] = useState(!!seededFromIntent?.usernote && canLeaveNote,)
 	const [usernoteText, setUsernoteText,] = useState(seededFromIntent?.usernote?.text ?? '',)
 	const [usernoteType, setUsernoteType,] = useState<string | undefined>(seededFromIntent?.usernote?.type,)
 	const [noteDestination, setNoteDestination,] = useState<NoteDestination>(
-		seededFromIntent?.usernote?.destination ?? defaultNoteDestination,
+		toolboxNotesAvailable ? seededFromIntent?.usernote?.destination ?? defaultNoteDestination : 'native',
 	)
 	const [nativeLabel, setNativeLabel,] = useState<string | undefined>(seededFromIntent?.usernote?.nativeLabel,)
 	// A frozen proposal that chose a mod note keeps the choice visible for the reviewer,
 	// even if this moderator has the Native Mod Log module turned off.
-	const showNoteDestinations = nativeNotesAvailable || seededFromIntent?.usernote?.destination === 'native'
+	// Offering a choice only makes sense when a Toolbox note is one of the options.
+	const showNoteDestinations = toolboxNotesAvailable
+		&& (nativeNotesAvailable || seededFromIntent?.usernote?.destination === 'native')
 	/** Always-current ref so the sync effect can read usernoteText without depending on it. */
 	const usernoteTextRef = useRef('',)
 	usernoteTextRef.current = usernoteText
@@ -727,9 +739,12 @@ export function RemovalReasonsOverlay ({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [],)
 
-	async function handleLeaveUsernoteToggle (checked: boolean,) {
+	async function handleLeaveUsernoteToggle (requested: boolean,) {
+		// Also reached when selecting a reason with a default note: never switch a note on
+		// when there is nowhere to write it.
+		const checked = requested && canLeaveNote
 		setLeaveUsernote(checked,)
-		if (checked && subredditColors === null && !colorsLoading) {
+		if (checked && toolboxNotesAvailable && subredditColors === null && !colorsLoading) {
 			setColorsLoading(true,)
 			try {
 				setSubredditColors(await getSubredditColors(data.subreddit,),)
@@ -1360,12 +1375,22 @@ export function RemovalReasonsOverlay ({
 			</Section>
 
 			<div className={css.messagePiece}>
-				<CheckboxInput
-					className={css.includeToggle}
-					label="Leave a note for this user"
-					checked={leaveUsernote}
-					onChange={(event,) => void handleLeaveUsernoteToggle(event.target.checked,)}
-				/>
+				{canLeaveNote
+					? (
+						<CheckboxInput
+							className={css.includeToggle}
+							label={toolboxNotesAvailable
+								? 'Leave a note for this user'
+								: 'Leave a Reddit mod note for this user'}
+							checked={leaveUsernote}
+							onChange={(event,) => void handleLeaveUsernoteToggle(event.target.checked,)}
+						/>
+					)
+					: (
+						<p className={css.fieldHint}>
+							Toolbox usernotes need the wiki permission in /r/{data.subreddit}.
+						</p>
+					)}
 				{leaveUsernote && (
 					<div className={css.subOptions}>
 						{showNoteDestinations && (

@@ -38,6 +38,7 @@ import {
 	type UsernotesUser,
 } from '../../../util/wiki/schemas/usernotes/schema'
 import {readShardedUsernotes, writeShardedUsernotes,} from '../../../util/wiki/schemas/usernotes/sharded'
+import {lacksWikiAccess,} from '../../../util/wiki/wikiAccess'
 import {OLD_WIKI_PATHS,} from '../../../util/wiki/wikiConstants'
 import {recoverLegacyUsernoteColors,} from '../../../util/wiki/wikiMigration'
 import {compatMirrorEnabled, resolveWikiLayout,} from '../../../util/wiki/wikiPaths'
@@ -451,6 +452,13 @@ async function doUpdateUserNotes (
 	subreddit: string,
 	transform: (notes: UserNotesData,) => string | undefined,
 ): Promise<UserNotesData | undefined> {
+	// Toolbox usernotes live in mod-only wiki pages: a moderator without the wiki
+	// permission can neither read nor write them. The UI hides note entry points for
+	// them; this is the backstop, thrown (not `undefined`) so callers surface a failure
+	// rather than treating the note as saved.
+	if (await lacksWikiAccess(subreddit,)) {
+		throw new Error(`Toolbox usernotes need the wiki permission in /r/${subreddit}`,)
+	}
 	let notes: UserNotesData
 	try {
 		// Skip the cache: the whole point is to merge against the live wiki state.

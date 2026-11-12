@@ -43,6 +43,8 @@ vi.mock('../../../util/data/encoding', () => ({
 	byteLength: (s: string,) => new TextEncoder().encode(s,).length,
 }),)
 const recoverLegacyUsernoteColors = vi.hoisted(() => vi.fn())
+const lacksWikiAccess = vi.hoisted(() => vi.fn(async () => false))
+vi.mock('../../../util/wiki/wikiAccess', () => ({lacksWikiAccess,}),)
 vi.mock('../../../util/wiki/wikiMigration', () => ({recoverLegacyUsernoteColors,}),)
 const resolveWikiLayout = vi.hoisted(() =>
 	vi.fn().mockResolvedValue({subreddit: 'sub', state: 'legacyFallback', compatibilityWrites: false,},)
@@ -806,6 +808,14 @@ describe('updateUserNotes', () => {
 			},),
 		},)
 	}
+
+	it('refuses to write for a moderator without the wiki permission', async () => {
+		lacksWikiAccess.mockResolvedValueOnce(true,)
+		const transform = vi.fn(() => 'add note')
+		await expect(updateUserNotes('nowiki', transform,),).rejects.toThrow(/wiki permission/,)
+		expect(transform,).not.toHaveBeenCalled()
+		expect(postToWiki,).not.toHaveBeenCalled()
+	})
 
 	it('seeds a sub\'s first notes with the legacy config\'s types, not the defaults', async () => {
 		// Migrated without a usernotes page: no manifest, but types configured for 6.x.
