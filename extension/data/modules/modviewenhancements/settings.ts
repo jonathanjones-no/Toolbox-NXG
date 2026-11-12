@@ -86,7 +86,7 @@ export const settings = defineSettings(
 			// Off by default: each profile visit costs an extra about.json request for the account id.
 			default: false,
 			description:
-				'Show a "start chat" link in the user profile sidebar. Reddit no longer offers one on old Reddit. Looking up the account adds an extra request on each profile you visit, and the link is shown even if the user has chat turned off, since Reddit does not report that setting.',
+				'Show a "start chat" link in the user profile sidebar, which Reddit no longer offers on old Reddit. The link appears whether or not the user has chat enabled, because Reddit does not report that setting; if they have chat turned off, Reddit\'s chat window will say so. Adds an extra request on each profile you visit.',
 			oldReddit: true,
 		},
 	] as const,
