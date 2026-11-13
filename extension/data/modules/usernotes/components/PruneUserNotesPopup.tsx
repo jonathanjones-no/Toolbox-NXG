@@ -5,7 +5,7 @@ import {useMemo, useState,} from 'react'
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {CheckboxInput,} from '../../../shared/controls/CheckboxInput'
 import {NumberInput,} from '../../../shared/controls/NumberInput'
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {daysToMilliseconds,} from '../../../util/data/time'
 import {
 	type ArchivedMode,
@@ -361,7 +361,7 @@ export function PruneUserNotesPanel ({
 																<span className={css.modInfo}>
 																	by /u/{row.note.mod}
 																</span>
-																<RelativeTime date={new Date(row.note.time * 1000,)} />
+																<Timestamp date={new Date(row.note.time * 1000,)} />
 															</div>
 														)
 													},)}

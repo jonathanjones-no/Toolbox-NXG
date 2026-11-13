@@ -21,7 +21,10 @@ vi.mock('../../../util/ui/hooks', async (importOriginal,) => ({
 	useSetting: (_moduleName: string, settingName: keyof typeof settingValues, defaultValue: unknown,) =>
 		settingValues[settingName] ?? defaultValue,
 }),)
-vi.mock('../../../store', () => ({default: {dispatch: vi.fn(), getState: vi.fn(), subscribe: vi.fn(),},}),)
+vi.mock(
+	'../../../store',
+	() => ({default: {dispatch: vi.fn(), getState: vi.fn(() => ({settings: {values: {},},})), subscribe: vi.fn(),},}),
+)
 vi.mock('../../../store/feedback', () => ({
 	negativeTextFeedback: vi.fn(),
 	positiveTextFeedback: vi.fn(),

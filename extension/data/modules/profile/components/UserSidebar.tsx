@@ -4,7 +4,7 @@ import {useEffect, useState,} from 'react'
 import {aboutUser, getUserListingPage,} from '../../../api/resources/users'
 import type {UserAbout,} from '../../../api/resources/users'
 import {GeneralButton,} from '../../../shared/controls/GeneralButton'
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {link,} from '../../../util/reddit/pageContext'
 import {getUserThumbnailUrl,} from './ProfileOverlay.helpers'
 import css from './ProfileOverlay.module.css'
@@ -96,7 +96,7 @@ export function UserSidebar ({user,}: UserSidebarProps,) {
 				<li>Link karma: {linkKarma.toLocaleString()}</li>
 				<li>Comment karma: {commentKarma.toLocaleString()}</li>
 				<li className="toolbox-user-detail-join-date">
-					Joined <RelativeTime date={createdAt} />
+					Joined <Timestamp date={createdAt} />
 				</li>
 				<li>{verifiedMail ? 'Verified mail' : 'No verified mail'}</li>
 			</ul>

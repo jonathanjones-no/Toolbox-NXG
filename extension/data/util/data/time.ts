@@ -49,6 +49,24 @@ export function relativeTimeShort (utcSeconds: number,): string {
 	return `${Math.floor(hrs / 24,)}d ago`
 }
 
+/** How timestamps are displayed; the stored keys of the General Settings `timeFormat` selector. */
+export type TimeFormat = 'relative' | 'absolute' | 'relative_and_date'
+
+/**
+ * Formats a date in the given time format. Absolute dates follow the viewer's locale, so a
+ * German browser reads "12.11.2025, 14:03" where a US one reads "11/12/25, 2:03 PM".
+ * @param date Date to format.
+ * @param format Relative ("2 years ago"), absolute (date and time), or relative followed by the date.
+ * @param short Use the compact relative form ("3h ago") for tight layouts.
+ */
+export function formatTimestamp (date: Date, format: TimeFormat, short = false,): string {
+	if (format === 'absolute') {
+		return date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short',},)
+	}
+	const relative = short ? relativeTimeShort(date.getTime() / 1000,) : formatRelativeTime(date,)
+	return format === 'relative_and_date' ? `${relative} (${date.toLocaleDateString()})` : relative
+}
+
 /** Returns the current time in milliseconds. */
 export function getTime (): number {
 	return Date.now()

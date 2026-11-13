@@ -1,5 +1,5 @@
 /** Presentational table of recent mod-log actions for a queue item. */
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {actionFamily, actionLabels,} from '../../../util/reddit/modActions'
 import type {ActionEntry,} from '../schema'
 import css from './ActionDetails.module.css'
@@ -40,7 +40,7 @@ export function ActionsTable (
 							<td>{actionLabels[v.action] ?? v.action}</td>
 							<td>{v.details}{description}</td>
 							<td>
-								<RelativeTime date={createdAt} />
+								<Timestamp date={createdAt} />
 							</td>
 						</tr>
 					)

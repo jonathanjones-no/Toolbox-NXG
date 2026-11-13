@@ -9,7 +9,7 @@ import {useId, useState,} from 'react'
 
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {Icon,} from '../../../shared/controls/Icon'
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {classes,} from '../../../util/ui/reactMount'
 import type {UserNoteColor, UserNoteEntry,} from '../../../util/wiki/schemas/usernotes/schema'
 import {
@@ -39,7 +39,7 @@ function UsernoteRow ({note, colors,}: {note: UserNoteEntry; colors: UserNoteCol
 			)}
 			<span>{note.note}</span>
 			<span className={css.itemMeta}>
-				u/{note.mod} · <RelativeTime date={new Date(note.time * 1000,)} />
+				u/{note.mod} · <Timestamp date={new Date(note.time * 1000,)} />
 			</span>
 		</li>
 	)

@@ -18,7 +18,7 @@ import {getModSubs,} from '../../../api/resources/modSubs'
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {Icon,} from '../../../shared/controls/Icon'
 import {reactAlert,} from '../../../shared/controls/ReactAlert'
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {PushDrawer,} from '../../../shared/window/PushDrawer'
 import {Window,} from '../../../shared/window/Window'
 import {negativeTextFeedback, positiveTextFeedback,} from '../../../store/feedback'
@@ -538,7 +538,7 @@ function ProposalsReviewPopup ({currentSubreddit, onClose,}: Props,) {
 					{excerpt && <span className={css.itemExcerpt}>{excerpt}</span>}
 					<span className={css.itemMeta}>
 						r/{at.subreddit} · u/{proposal.proposedBy} ·{' '}
-						<RelativeTime date={new Date(proposal.proposedAt * 1000,)} />
+						<Timestamp date={new Date(proposal.proposedAt * 1000,)} />
 					</span>
 					<span className={css.itemStatus}>{describeStatus(proposal,)}</span>
 				</button>

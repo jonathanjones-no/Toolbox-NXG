@@ -10,8 +10,8 @@ import type {RequestError,} from '../../../api/transport/http'
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {ActionSelect,} from '../../../shared/controls/ActionSelect'
 import {TextInput,} from '../../../shared/controls/NormalInput'
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
 import {SelectInput,} from '../../../shared/controls/SelectInput'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {Window,} from '../../../shared/window/Window'
 import {WindowTabs,} from '../../../shared/window/WindowTabs'
 import store from '../../../store'
@@ -903,7 +903,7 @@ export function ModButtonPopup ({
 							{existingBan && (
 								<div className={css.alreadyBanned}>
 									banned by <a href={existingBan.modLink}>{existingBan.modName}</a>{' '}
-									<RelativeTime date={existingBan.timestamp} />
+									<Timestamp date={existingBan.timestamp} />
 									{existingBan.daysLeft !== null
 										? ` · ${existingBan.daysLeft} day${
 											existingBan.daysLeft !== 1 ? 's' : ''

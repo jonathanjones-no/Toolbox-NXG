@@ -4,8 +4,8 @@ import {useState,} from 'react'
 
 import type {RedditThing, SubmissionData,} from '../../../api/resources/things'
 import {Icon,} from '../../../shared/controls/Icon'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {purifyHTML,} from '../../../util/data/purify'
-import {formatRelativeTime,} from '../../../util/data/time'
 import {link,} from '../../../util/reddit/pageContext'
 import {stringToColor,} from '../../../util/reddit/reddit-domain'
 import {deriveThingStatus,} from './deriveStatus'
@@ -119,24 +119,11 @@ export function TBSubmission ({submission, options, subredditColorSalt,}: TBSubm
 				<div className="toolbox-tagline">
 					submitted{' '}
 					<span className="toolbox-submission-submitted">
-						<time
-							className="toolbox-live-timestamp"
-							dateTime={createdAt.toISOString()}
-							title={createdAt.toLocaleString()}
-						>
-							{formatRelativeTime(createdAt,)}
-						</time>
+						<Timestamp className="toolbox-live-timestamp" date={createdAt} />
 					</span>
 					{editedAt && (
 						<span className="toolbox-submission-edited">
-							*last edited{' '}
-							<time
-								className="toolbox-live-timestamp"
-								dateTime={editedAt.toISOString()}
-								title={editedAt.toLocaleString()}
-							>
-								{formatRelativeTime(editedAt,)}
-							</time>
+							*last edited <Timestamp className="toolbox-live-timestamp" date={editedAt} />
 						</span>
 					)} by {s.author === '[deleted]'
 						? <span>[deleted]</span>

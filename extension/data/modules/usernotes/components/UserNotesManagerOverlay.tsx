@@ -7,7 +7,7 @@ import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {ActionSelect,} from '../../../shared/controls/ActionSelect'
 import {Icon,} from '../../../shared/controls/Icon'
 import {TextInput,} from '../../../shared/controls/NormalInput'
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {FullPageDialog,} from '../../../shared/window/FullPageDialog'
 import {TabBar,} from '../../../shared/window/TabBar'
 import {positiveTextFeedback,} from '../../../store/feedback'
@@ -813,7 +813,7 @@ function UserNotesManagerOverlay ({
 															</span>
 														)}
 														<span className={css.modInfo}>by /u/{note.mod}</span>
-														<RelativeTime date={new Date(note.time * 1000,)} />
+														<Timestamp date={new Date(note.time * 1000,)} />
 													</div>
 												</div>
 											)

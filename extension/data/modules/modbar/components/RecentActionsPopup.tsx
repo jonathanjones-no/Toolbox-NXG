@@ -4,8 +4,8 @@ import {useEffect, useRef, useState,} from 'react'
 
 import {getModLogEntries, type RedditModLogEntry,} from '../../../api/resources/subreddits'
 import {Icon,} from '../../../shared/controls/Icon'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {ShadowPortal,} from '../../../shared/window/ShadowPortal'
-import {relativeTimeShort,} from '../../../util/data/time'
 import {type ActionFamily, actionFamily, actionLabels,} from '../../../util/reddit/modActions'
 
 import css from './RecentActionsPopup.module.css'
@@ -182,7 +182,7 @@ export function RecentActionsPopup ({onClose,}: {onClose: () => void},) {
 								>
 									/u/{action.mod}
 								</a>
-								<span className={css.time}>{relativeTimeShort(action.created_utc,)}</span>
+								<Timestamp className={css.time} date={new Date(action.created_utc * 1000,)} short />
 							</div>
 						)
 					},)}

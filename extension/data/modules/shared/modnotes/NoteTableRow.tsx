@@ -1,7 +1,7 @@
 /** Single row/card for a mod note inside ModNotesPager, with optional delete button. */
 
 import {Icon,} from '../../../shared/controls/Icon'
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {link,} from '../../../util/reddit/pageContext'
 import {useFetched,} from '../../../util/ui/hooks'
 import {getContextURL,} from './helpers'
@@ -74,7 +74,7 @@ export function NoteTableRow ({note, onDelete, card = false,}: NoteTableRowProps
 					)}
 				</div>
 				<span className={css.nativeNoteDate}>
-					<RelativeTime date={createdAt} />
+					<Timestamp date={createdAt} />
 				</span>
 			</article>
 		)
@@ -91,10 +91,10 @@ export function NoteTableRow ({note, onDelete, card = false,}: NoteTableRowProps
 					{contextURL
 						? (
 							<a href={contextURL}>
-								<RelativeTime date={createdAt} />
+								<Timestamp date={createdAt} />
 							</a>
 						)
-						: <RelativeTime date={createdAt} />}
+						: <Timestamp date={createdAt} />}
 				</small>
 			</td>
 			<td>

@@ -11,8 +11,8 @@ import {useEffect, useState,} from 'react'
 
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {Icon,} from '../../../shared/controls/Icon'
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
 import {TextareaInput,} from '../../../shared/controls/TextareaInput'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import createLogger from '../../../util/infra/logging'
 import {classes,} from '../../../util/ui/reactMount'
 import type {UserNoteColor,} from '../../../util/wiki/schemas/usernotes/schema'
@@ -134,7 +134,7 @@ export function ProposalDetail ({
 				</dd>
 				<dt>When</dt>
 				<dd>
-					<RelativeTime date={toDate(proposal.proposedAt,)} />
+					<Timestamp date={toDate(proposal.proposedAt,)} />
 				</dd>
 				<dt>Status</dt>
 				<dd>{describeStatus(proposal,)}</dd>
@@ -168,7 +168,7 @@ export function ProposalDetail ({
 							<strong>Previous accept failed at “{na.failedStep}”.</strong> {na.error}
 						</div>
 						<div>
-							Attempted by u/{na.attemptedBy} <RelativeTime date={toDate(na.attemptedAt,)} />
+							Attempted by u/{na.attemptedBy} <Timestamp date={toDate(na.attemptedAt,)} />
 						</div>
 						{na.irreversibleSideEffect && (
 							<div>

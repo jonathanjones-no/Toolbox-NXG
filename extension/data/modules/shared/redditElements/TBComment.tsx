@@ -6,9 +6,9 @@ import {useState,} from 'react'
 
 import type {CommentData, RedditMoreChildren, RedditThing,} from '../../../api/resources/things'
 import {isMoreChildren,} from '../../../api/resources/things'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {purifyHTML,} from '../../../util/data/purify'
 import {escapeHTML, removeLastDirectoryPartOf,} from '../../../util/data/string'
-import {formatRelativeTime,} from '../../../util/data/time'
 import {link,} from '../../../util/reddit/pageContext'
 import {stringToColor,} from '../../../util/reddit/reddit-domain'
 import {deriveThingStatus,} from './deriveStatus'
@@ -162,25 +162,12 @@ export function TBComment ({comment, options = {}, subredditColorSalt,}: TBComme
 							<span className="toolbox-userattrs">[{authorAttrs}]</span>
 						)}
 						<span className="toolbox-author-slot"></span>{' '}
-						<time
-							className="toolbox-live-timestamp"
-							dateTime={createdAt.toISOString()}
-							title={createdAt.toLocaleString()}
-						>
-							{formatRelativeTime(createdAt,)}
-						</time>
+						<Timestamp className="toolbox-live-timestamp" date={createdAt} />
 						{editedAt && (
 							<>
 								{' '}
 								<span className="toolbox-comment-edited">
-									*last edited{' '}
-									<time
-										className="toolbox-live-timestamp"
-										dateTime={editedAt.toISOString()}
-										title={editedAt.toLocaleString()}
-									>
-										{formatRelativeTime(editedAt,)}
-									</time>
+									*last edited <Timestamp className="toolbox-live-timestamp" date={editedAt} />
 								</span>
 							</>
 						)}

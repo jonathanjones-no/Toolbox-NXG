@@ -20,6 +20,16 @@ export const settings = defineSettings(
 			description: 'Display native operating system notifications rather than in-page notifications',
 		},
 		{
+			id: 'timeFormat',
+			sharedPolicy: 'raw',
+			type: 'selector',
+			default: 'relative',
+			values: ['Relative', 'Absolute', 'Relative and date',] as const,
+			advanced: false,
+			description:
+				'How Toolbox shows timestamps: relative ("2 years ago"), the date and time, or both ("2 years ago (12.11.2025)")',
+		},
+		{
 			id: 'contextMenuLocation',
 			sharedPolicy: 'raw',
 			type: 'selector',

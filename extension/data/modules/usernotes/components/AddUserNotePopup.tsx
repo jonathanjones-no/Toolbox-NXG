@@ -6,7 +6,7 @@ import {Provider,} from 'react-redux'
 import {usernotes,} from '../../../framework/moduleIds'
 import {ActionButton,} from '../../../shared/controls/ActionButton'
 import {Icon,} from '../../../shared/controls/Icon'
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import {Window,} from '../../../shared/window/Window'
 import {BanMacroSelect,} from '../../shared/banMacros/components/BanMacroSelect'
 import {BanTokenWarning,} from '../../shared/banMacros/components/BanTokenWarning'
@@ -363,7 +363,7 @@ export function AddUserNotePopup ({
 					const canEdit = editableNoteIds.has(note.id,)
 					const isBusy = busyNoteIds.has(note.id,)
 					const isHidden = note.archived !== undefined
-					const timeEl = <RelativeTime date={new Date(note.time * 1000,)} />
+					const timeEl = <Timestamp date={new Date(note.time * 1000,)} />
 					return (
 						<article
 							className={`${css.noteCard} ${note.link ? css.noteCardLinked : ''} ${
@@ -459,7 +459,7 @@ export function AddUserNotePopup ({
 								{note.archived && (
 									<span className={css.noteStatus}>
 										{' '}- archived {formatArchiveAttribution(note.archived.by,)}{' '}
-										<RelativeTime date={new Date(note.archived.at * 1000,)} />
+										<Timestamp date={new Date(note.archived.at * 1000,)} />
 									</span>
 								)}
 							</span>

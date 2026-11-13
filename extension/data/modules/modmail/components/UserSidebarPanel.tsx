@@ -3,7 +3,7 @@
 import {useEffect, useState,} from 'react'
 
 import {getModmailParticipant,} from '../../../api/resources/modmail'
-import {RelativeTime,} from '../../../shared/controls/RelativeTime'
+import {Timestamp,} from '../../../shared/controls/Timestamp'
 import createLogger from '../../../util/infra/logging'
 import {ModNotesPager,} from '../../shared/modnotes/ModNotesPager'
 import {normalizeRecentActivity, type SidebarActivityItem,} from '../schema'
@@ -118,7 +118,7 @@ function ActivityList ({items, emptyLabel,}: {
 					{item.body && <p className={css.itemBody}>{item.body}</p>}
 					<div className={css.itemMeta}>
 						{item.subreddit && <span>r/{item.subreddit}</span>}
-						{item.date && <RelativeTime date={item.date} />}
+						{item.date && <Timestamp date={item.date} />}
 					</div>
 				</li>
 			))}
