@@ -24,7 +24,7 @@ Click the tag to open the user's native mod log for that subreddit. It has three
 - **Notes** — only mod notes;
 - **Mod Actions** — only mod actions (removals, bans, approvals, ...).
 
-Each entry links to the post or comment it is about, where there is one. Notes can be deleted from the list.
+Each entry links to the post or comment it is about, where there is one. Notes can be deleted from the list. Entries show how long ago they happened; to see the date as well, change **Time format** in [General Settings](general.md#time-format).
 
 ### Adding a note
 

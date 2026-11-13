@@ -12,6 +12,7 @@ vi.mock('../../store', () => ({
 	},
 }),)
 
+import {absoluteFormat,} from '../../util/data/time'
 import {Timestamp,} from './Timestamp'
 
 const date = new Date('2024-01-15T12:00:00Z',)
@@ -41,7 +42,7 @@ describe('Timestamp', () => {
 	})
 
 	it('shows the date and time when set to absolute', () => {
-		const absolute = date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short',},)
+		const absolute = date.toLocaleString(undefined, absoluteFormat,)
 		const html = render('absolute',)
 		expect(html,).toContain(`>${absolute}</time>`,)
 		expect(html,).toContain('title="2 years ago"',)
